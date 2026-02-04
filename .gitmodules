@@ -1,0 +1,12 @@
+[submodule "libs/imgui"]
+	path = libs/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "libs/MinHook"]
+	path = libs/MinHook
+	url = https://github.com/TsudaKageyu/minhook.git
+[submodule "libs/imnodes"]
+	path = libs/imnodes
+	url = https://github.com/Nelarius/imnodes
+[submodule "lje"]
+	path = lje
+	url = https://github.com/lj-expand/lj-expand
