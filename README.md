@@ -16,6 +16,13 @@ full widget API accessible from LJE scripts.
 - Full ImGui widget API exposed to Lua
 - imnodes node editor API exposed to Lua
 
+## Installation
+
+1. Download the latest `lje-imgui.dll` from the [releases](https://github.com/lj-expand/lje-imgui/releases) page.
+2. Place the DLL in the `.lje_modules` folder inside your user directory (`%USERPROFILE%\.lje_modules`) - create if not
+   exists.
+3. Launch LJE. It will automatically load the module.
+
 ## Building
 
 Requires Windows, MSVC, CMake 3.31+, and Ninja.
