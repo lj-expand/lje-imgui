@@ -334,6 +334,10 @@ LRESULT CALLBACK Overlay::wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpa
     overlay->toggle_visible();
   }
 
+  if (msg == WM_KEYDOWN && wparam == VK_ESCAPE && overlay->is_visible()) {
+    overlay->set_visible(false);
+  }
+
   // When visible, let ImGui handle input first
   if (overlay->is_visible()) {
     if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
