@@ -71,7 +71,7 @@ bool Overlay::try_init() {
   HWND temp_hwnd = CreateWindowExA(
       0, wc.lpszClassName, "", WS_OVERLAPPEDWINDOW,
       0, 0, 100, 100, nullptr, nullptr, wc.hInstance, nullptr
-  );
+      );
 
   if (!temp_hwnd) {
     UnregisterClassA(wc.lpszClassName, wc.hInstance);
@@ -97,7 +97,7 @@ bool Overlay::try_init() {
   auto hr = d3d->CreateDevice(
       D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, temp_hwnd,
       D3DCREATE_SOFTWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED, &pp, &dummy
-  );
+      );
 
   if (FAILED(hr) || !dummy) {
     d3d->Release();
@@ -329,13 +329,9 @@ LRESULT CALLBACK Overlay::wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpa
     return DefWindowProc(hwnd, msg, wparam, lparam);
   }
 
-  // Toggle visibility with INSERT key
-  if (msg == WM_KEYDOWN && wparam == VK_INSERT) {
+  // Toggle visibility
+  if (msg == WM_KEYDOWN && wparam == overlay->toggle_bind_) {
     overlay->toggle_visible();
-  }
-
-  if (msg == WM_KEYDOWN && wparam == VK_ESCAPE && overlay->is_visible()) {
-    overlay->set_visible(false);
   }
 
   // When visible, let ImGui handle input first

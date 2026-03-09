@@ -370,8 +370,10 @@ static int input_text(lua_State *L) {
   lua->pop(L, nargs);
 
   // Clamp to reasonable bounds
-  if (max_size < 1) max_size = 1;
-  if (max_size > 16384) max_size = 16384;
+  if (max_size < 1)
+    max_size = 1;
+  if (max_size > 16384)
+    max_size = 16384;
 
   static thread_local std::vector<char> buf;
   buf.resize(max_size);
@@ -404,15 +406,17 @@ static int input_text_multiline(lua_State *L) {
   lua->pop(L, nargs);
 
   // Clamp to reasonable bounds
-  if (max_size < 1) max_size = 1;
-  if (max_size > 1048576) max_size = 1048576; // 1MB max for multiline
+  if (max_size < 1)
+    max_size = 1;
+  if (max_size > 1048576)
+    max_size = 1048576; // 1MB max for multiline
 
   static thread_local std::vector<char> buf;
   buf.resize(max_size);
   strncpy_s(buf.data(), buf.size(), current ? current : "", buf.size() - 1);
 
   bool changed = ImGui::InputTextMultiline(label, buf.data(), buf.size(),
-                                            ImVec2(width, height), flags);
+                                           ImVec2(width, height), flags);
   lua->pushboolean(L, changed);
   lua->pushstring(L, buf.data());
   return 2;
@@ -520,7 +524,8 @@ static int push_id(lua_State *L) {
   int nargs = lua->gettop(L);
   if (nargs >= 1) {
     int type = lua->type(L, 1);
-    if (type == 3) { // LUA_TNUMBER
+    if (type == 3) {
+      // LUA_TNUMBER
       int id = static_cast<int>(lua->tonumber(L, 1));
       ImGui::PushID(id);
     } else {
@@ -1222,6 +1227,19 @@ static int set_style(lua_State *L) {
   return 0;
 }
 
+static int set_overlay_bind(lua_State *L) {
+  auto lua = g_api->lua;
+  const auto overlay = Overlay::get();
+  if (!overlay) {
+    return 0;
+  }
+
+  const auto vkKeyCode = static_cast<int>(lua->tonumber(L, 1));
+  overlay->set_toggle_bind(vkKeyCode);
+
+  return 0;
+}
+
 void register_all(lua_State *L) {
   auto lua = g_api->lua;
 
@@ -1519,6 +1537,10 @@ void register_all(lua_State *L) {
   // Style
   lua->pushcclosure(L, set_style, 0);
   lua->setfield(L, -2, "set_style");
+
+  // Overlay
+  lua->pushcclosure(L, set_overlay_bind, 0);
+  lua->setfield(L, -2, "set_overlay_bind");
 
   // Set imgui table in ljeenv
   lua->setfield(L, -2, "imgui");

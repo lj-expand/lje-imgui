@@ -29,6 +29,7 @@ public:
   bool is_visible() const { return visible_; }
   void set_visible(bool v) { visible_ = v; }
   void toggle_visible() { visible_ = !visible_; }
+  void set_toggle_bind(WPARAM vk) { toggle_bind_ = vk; }
 
   State state() const { return state_; }
 
@@ -64,4 +65,5 @@ private:
   // Overlay will render it in the next call to EndScene, so it is undetectable/grabbable.
   bool frame_started_ = false;
   bool frame_ready_ = false; // Draw data ready to render
+  WPARAM toggle_bind_ = VK_INSERT;
 };
