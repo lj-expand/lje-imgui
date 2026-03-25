@@ -294,6 +294,22 @@ static int end_window(lua_State *L) {
   return 0;
 }
 
+// Todo: Expose ImGuiCond (for now you can use a number)
+static int set_next_window_pos(lua_State* L) {
+  auto lua = g_api->lua;
+  float pos_x = static_cast<float>(lua->tonumber(L, 1));
+  float pos_y = static_cast<float>(lua->tonumber(L, 2));
+  int cond = ImGuiCond_Always; // if no condition is passed from lua, let's just use always.
+  int nargs = lua->gettop(L);
+  if (nargs >= 3) {
+      cond = static_cast<int>(lua->tonumber(L, 3));
+  }
+  lua->pop(L, nargs);
+  ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y), cond);
+  return 0;
+}
+
+
 // Text
 static int text(lua_State *L) {
   auto lua = g_api->lua;
@@ -471,7 +487,56 @@ static int slider_int(lua_State *L) {
   return 2;
 }
 
+
 // Layout
+// Layout -> Cursor
+int set_cursor_pos(lua_State *L) {
+  auto lua = g_api->lua;
+  float x = static_cast<float>(lua->tonumber(L, 1));
+  float y = static_cast<float>(lua->tonumber(L, 2));
+  ImGui::SetCursorPos(ImVec2(x, y));
+}
+
+// We return the cursor pos as a table.
+int get_cursor_pos(lua_State* L) {
+  auto lua = g_api->lua;
+  ImVec2 pos = ImGui::GetCursorPos();
+  lua->createtable(L, 0, 2);
+  lua->pushinteger(L, pos.x);
+  lua->setfield(L, -2, "x");
+	lua->pushinteger(L, pos.y);
+	lua->setfield(L, -2, "y");
+  return 1;
+}
+
+int set_cursor_pos_x(lua_State *L) {
+  auto lua = g_api->lua;
+  float pos_x = static_cast<float>(lua->tonumber(L, 1));
+  ImGui::SetCursorPosX(pos_x);
+  return 0;
+}
+
+int get_cursor_pos_x(lua_State *L) {
+  auto lua = g_api->lua;
+  float pos_x = ImGui::GetCursorPosX();
+  lua->pushnumber(L, pos_x);
+  return 1;
+}
+
+int set_cursor_pos_y(lua_State *L) {
+  auto lua = g_api->lua;
+  float pos_y = static_cast<float>(lua->tonumber(L, 1));
+  ImGui::SetCursorPosY(pos_y);
+  return 0;
+}
+
+int get_cursor_pos_y(lua_State *L) {
+  auto lua = g_api->lua;
+  float pos_y = ImGui::GetCursorPosY();
+  lua->pushnumber(L, pos_y);
+  return 1;
+}
+
 static int same_line(lua_State *L) {
   auto lua = g_api->lua;
   float offset = 0, spacing = -1;
@@ -1253,6 +1318,8 @@ void register_all(lua_State *L) {
   lua->setfield(L, -2, "begin_window");
   lua->pushcclosure(L, end_window, 0);
   lua->setfield(L, -2, "end_window");
+  lua->pushcclosure(L, set_next_window_pos, 0);
+  lua->setfield(L, -2, "set_next_window_pos");
 
   // Child Window
   lua->pushcclosure(L, begin_child, 0);
@@ -1431,6 +1498,20 @@ void register_all(lua_State *L) {
   lua->setfield(L, -2, "push_id");
   lua->pushcclosure(L, pop_id, 0);
   lua->setfield(L, -2, "pop_id");
+
+  // Cursor
+  lua->pushcclosure(L, set_cursor_pos, 0);
+  lua->setfield(L, -2, "set_cursor_pos");
+  lua->pushcclosure(L, get_cursor_pos, 0);
+  lua->setfield(L, -2, "get_cursor_pos");
+  lua->pushcclosure(L, set_cursor_pos_x, 0);
+  lua->setfield(L, -2, "set_cursor_pos_x");
+  lua->pushcclosure(L, get_cursor_pos_x, 0);
+  lua->setfield(L, -2, "get_cursor_pos_x");
+  lua->pushcclosure(L, set_cursor_pos_y, 0);
+  lua->setfield(L, -2, "set_cursor_pos_y");
+  lua->pushcclosure(L, get_cursor_pos_y, 0);
+  lua->setfield(L, -2, "get_cursor_pos_y");
 
   // Collapsing/Tree
   lua->pushcclosure(L, collapsing_header, 0);
