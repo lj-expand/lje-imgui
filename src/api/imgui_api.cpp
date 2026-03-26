@@ -495,6 +495,7 @@ int set_cursor_pos(lua_State *L) {
   float x = static_cast<float>(lua->tonumber(L, 1));
   float y = static_cast<float>(lua->tonumber(L, 2));
   ImGui::SetCursorPos(ImVec2(x, y));
+  return 0;
 }
 
 // We return the cursor pos as a table.
