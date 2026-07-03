@@ -1,4 +1,6 @@
 #include "imgui_api.hpp"
+
+#include "imgui_internal.h"
 #include "../globals.hpp"
 #include "../overlay.hpp"
 #include <imgui.h>
@@ -234,6 +236,55 @@ static int get_scroll_max_y(lua_State *L) {
   auto lua = g_api->lua;
   lua->pushnumber(L, ImGui::GetScrollMaxY());
   return 1;
+}
+
+static int get_content_region_avail(lua_State *L) {
+  auto lua = g_api->lua;
+  ImVec2 v = ImGui::GetContentRegionAvail();
+  lua->pushnumber(L, v.x);
+  lua->pushnumber(L, v.y);
+  return 2;
+}
+
+static int get_content_region_max(lua_State *L) {
+  auto lua = g_api->lua;
+  ImVec2 v = ImGui::GetContentRegionMax();
+  lua->pushnumber(L, v.x);
+  lua->pushnumber(L, v.y);
+  return 2;
+}
+
+static int get_window_size(lua_State *L) {
+  auto lua = g_api->lua;
+  ImVec2 v = ImGui::GetWindowSize();
+  lua->pushnumber(L, v.x);
+  lua->pushnumber(L, v.y);
+  return 2;
+}
+
+static int get_window_pos(lua_State *L) {
+  auto lua = g_api->lua;
+  ImVec2 v = ImGui::GetWindowPos();
+  lua->pushnumber(L, v.x);
+  lua->pushnumber(L, v.y);
+  return 2;
+}
+
+static int get_cursor_pos(lua_State *L) {
+  auto lua = g_api->lua;
+  ImVec2 v = ImGui::GetCursorPos();
+  lua->pushnumber(L, v.x);
+  lua->pushnumber(L, v.y);
+  return 2;
+}
+
+static int set_cursor_pos(lua_State *L) {
+  auto lua = g_api->lua;
+  float x = static_cast<float>(lua->tonumber(L, 1));
+  float y = static_cast<float>(lua->tonumber(L, 2));
+  lua->pop(L, 2);
+  ImGui::SetCursorPos(ImVec2(x, y));
+  return 0;
 }
 
 static int set_scroll_here_x(lua_State *L) {
@@ -519,6 +570,36 @@ static int set_next_item_width(lua_State *L) {
   return 0;
 }
 
+static int set_next_window_size(lua_State *L) {
+  auto lua = g_api->lua;
+  float width = static_cast<float>(lua->tonumber(L, 1));
+  float height = static_cast<float>(lua->tonumber(L, 2));
+  ImGuiCond cond = lua->gettop(L) >= 3 ? static_cast<ImGuiCond>(lua->tonumber(L, 3)) : 0;
+  lua->pop(L, lua->gettop(L));
+  ImGui::SetNextWindowSize(ImVec2(width, height), cond);
+  return 0;
+}
+
+static int set_next_window_pos(lua_State *L) {
+  auto lua = g_api->lua;
+  float x = static_cast<float>(lua->tonumber(L, 1));
+  float y = static_cast<float>(lua->tonumber(L, 2));
+  ImGuiCond cond = lua->gettop(L) >= 3 ? static_cast<ImGuiCond>(lua->tonumber(L, 3)) : 0;
+  lua->pop(L, lua->gettop(L));
+  ImGui::SetNextWindowPos(ImVec2(x, y), cond);
+  return 0;
+}
+
+static int set_next_window_focus(lua_State *L) {
+  ImGui::SetNextWindowFocus();
+  return 0;
+}
+
+static int bring_current_window_to_front(lua_State *L) {
+  ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindow());
+  return 0;
+}
+
 static int push_id(lua_State *L) {
   auto lua = g_api->lua;
   int nargs = lua->gettop(L);
@@ -669,7 +750,15 @@ static int end_tooltip(lua_State *L) {
 
 static int is_item_hovered(lua_State *L) {
   auto lua = g_api->lua;
-  lua->pushboolean(L, ImGui::IsItemHovered());
+  int flags = static_cast<int>(lua->tonumber(L, 1)); // 0 if not provided, which is fine.
+  lua->pushboolean(L, ImGui::IsItemHovered(flags));
+  return 1;
+}
+
+static int is_item_clicked(lua_State *L) {
+  auto lua = g_api->lua;
+  int flags = static_cast<int>(lua->tonumber(L, 1)); // 0 if not provided, which is fine.
+  lua->pushboolean(L, ImGui::IsItemClicked(flags));
   return 1;
 }
 
@@ -1328,6 +1417,57 @@ void register_all(lua_State *L) {
   lua->pushnumber(L, ImGuiWindowFlags_NoInputs);
   lua->setfield(L, -2, "WindowFlags_NoInputs");
 
+  // Cond flags
+  lua->pushnumber(L, ImGuiCond_Always);
+  lua->setfield(L, -2, "Cond_Always");
+  lua->pushnumber(L, ImGuiCond_Once);
+  lua->setfield(L, -2, "Cond_Once");
+  lua->pushnumber(L, ImGuiCond_FirstUseEver);
+  lua->setfield(L, -2, "Cond_FirstUseEver");
+  lua->pushnumber(L, ImGuiCond_Appearing);
+  lua->setfield(L, -2, "Cond_Appearing");
+
+  // Hovered flags
+  lua->pushnumber(L, ImGuiHoveredFlags_None);
+  lua->setfield(L, -2, "HoveredFlags_None");
+  lua->pushnumber(L, ImGuiHoveredFlags_ChildWindows);
+  lua->setfield(L, -2, "HoveredFlags_ChildWindows");
+  lua->pushnumber(L, ImGuiHoveredFlags_RootWindow);
+  lua->setfield(L, -2, "HoveredFlags_RootWindow");
+  lua->pushnumber(L, ImGuiHoveredFlags_AnyWindow);
+  lua->setfield(L, -2, "HoveredFlags_AnyWindow");
+  lua->pushnumber(L, ImGuiHoveredFlags_AllowWhenBlockedByPopup);
+  lua->setfield(L, -2, "HoveredFlags_AllowWhenBlockedByPopup");
+  lua->pushnumber(L, ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+  lua->setfield(L, -2, "HoveredFlags_AllowWhenBlockedByActiveItem");
+  lua->pushnumber(L, ImGuiHoveredFlags_AllowWhenOverlapped);
+  lua->setfield(L, -2, "HoveredFlags_AllowWhenOverlapped");
+  lua->pushnumber(L, ImGuiHoveredFlags_AllowWhenDisabled);
+  lua->setfield(L, -2, "HoveredFlags_AllowWhenDisabled");
+  // Delay parts
+  lua->pushnumber(L, ImGuiHoveredFlags_DelayNormal);
+  lua->setfield(L, -2, "HoveredFlags_DelayNormal");
+  lua->pushnumber(L, ImGuiHoveredFlags_DelayShort);
+  lua->setfield(L, -2, "HoveredFlags_DelayShort");
+  lua->pushnumber(L, ImGuiHoveredFlags_DelayNone);
+  lua->setfield(L, -2, "HoveredFlags_DelayNone");
+  lua->pushnumber(L, ImGuiHoveredFlags_Stationary);
+  lua->setfield(L, -2, "HoveredFlags_Stationary");
+
+  // Content region / layout
+  lua->pushcclosure(L, get_content_region_avail, 0);
+  lua->setfield(L, -2, "get_content_region_avail");
+  lua->pushcclosure(L, get_content_region_max, 0);
+  lua->setfield(L, -2, "get_content_region_max");
+  lua->pushcclosure(L, get_window_size, 0);
+  lua->setfield(L, -2, "get_window_size");
+  lua->pushcclosure(L, get_window_pos, 0);
+  lua->setfield(L, -2, "get_window_pos");
+  lua->pushcclosure(L, get_cursor_pos, 0);
+  lua->setfield(L, -2, "get_cursor_pos");
+  lua->pushcclosure(L, set_cursor_pos, 0);
+  lua->setfield(L, -2, "set_cursor_pos");
+
   // Scrolling
   lua->pushcclosure(L, get_scroll_x, 0);
   lua->setfield(L, -2, "get_scroll_x");
@@ -1427,6 +1567,14 @@ void register_all(lua_State *L) {
   lua->setfield(L, -2, "unindent");
   lua->pushcclosure(L, set_next_item_width, 0);
   lua->setfield(L, -2, "set_next_item_width");
+  lua->pushcclosure(L, set_next_window_size, 0);
+  lua->setfield(L, -2, "set_next_window_size");
+  lua->pushcclosure(L, set_next_window_pos, 0);
+  lua->setfield(L, -2, "set_next_window_pos");
+  lua->pushcclosure(L, set_next_window_focus, 0);
+  lua->setfield(L, -2, "set_next_window_focus");
+  lua->pushcclosure(L, bring_current_window_to_front, 0);
+  lua->setfield(L, -2, "bring_current_window_to_front");
   lua->pushcclosure(L, push_id, 0);
   lua->setfield(L, -2, "push_id");
   lua->pushcclosure(L, pop_id, 0);
@@ -1463,6 +1611,8 @@ void register_all(lua_State *L) {
   lua->setfield(L, -2, "end_tooltip");
   lua->pushcclosure(L, is_item_hovered, 0);
   lua->setfield(L, -2, "is_item_hovered");
+  lua->pushcclosure(L, is_item_clicked, 0);
+  lua->setfield(L, -2, "is_item_clicked");
 
   // Tabs
   lua->pushcclosure(L, begin_tab_bar, 0);
