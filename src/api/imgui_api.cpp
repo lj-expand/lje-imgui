@@ -595,6 +595,17 @@ static int set_next_window_focus(lua_State *L) {
   return 0;
 }
 
+static int set_keyboard_focus_here(lua_State *L) {
+  auto lua = g_api->lua;
+  int offset = 0;
+  int nargs = lua->gettop(L);
+  if (nargs >= 1)
+    offset = static_cast<int>(lua->tonumber(L, 1));
+  lua->pop(L, nargs);
+  ImGui::SetKeyboardFocusHere(offset);
+  return 0;
+}
+
 static int bring_current_window_to_front(lua_State *L) {
   ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindow());
   return 0;
@@ -1573,6 +1584,8 @@ void register_all(lua_State *L) {
   lua->setfield(L, -2, "set_next_window_pos");
   lua->pushcclosure(L, set_next_window_focus, 0);
   lua->setfield(L, -2, "set_next_window_focus");
+  lua->pushcclosure(L, set_keyboard_focus_here, 0);
+  lua->setfield(L, -2, "set_keyboard_focus_here");
   lua->pushcclosure(L, bring_current_window_to_front, 0);
   lua->setfield(L, -2, "bring_current_window_to_front");
   lua->pushcclosure(L, push_id, 0);
