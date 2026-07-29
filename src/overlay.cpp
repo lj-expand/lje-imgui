@@ -5,12 +5,40 @@
 #include <imgui_impl_dx9.h>
 #include <imgui_impl_win32.h>
 #include <imnodes.h>
+#include <filesystem>
+#include <string>
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
 
 namespace {
 constexpr size_t ENDSCENE_VTABLE_INDEX = 42;
 constexpr size_t RESET_VTABLE_INDEX = 16;
+
+const char *get_ini_path() {
+  static std::string path;
+  if (!path.empty())
+    return path.c_str();
+
+  char profile[MAX_PATH] = {};
+  DWORD len = GetEnvironmentVariableA("USERPROFILE", profile, sizeof(profile));
+  if (len == 0 || len >= sizeof(profile)) {
+    logger::warn("Overlay::get_ini_path() - failed to resolve USERPROFILE, using default imgui.ini");
+    path = "imgui.ini";
+    return path.c_str();
+  }
+
+  std::filesystem::path dir = std::filesystem::path(profile) / ".lje" / "data";
+  std::error_code ec;
+  std::filesystem::create_directories(dir, ec);
+  if (ec) {
+    logger::warn("Overlay::get_ini_path() - failed to create %s: %s", dir.string().c_str(), ec.message().c_str());
+    path = "imgui.ini";
+    return path.c_str();
+  }
+
+  path = (dir / "imgui.ini").string();
+  return path.c_str();
+}
 }
 
 std::shared_ptr<Overlay> Overlay::instance_ = nullptr;
@@ -274,6 +302,7 @@ bool Overlay::init_imgui(IDirect3DDevice9 *dev) {
 
   auto &io = ImGui::GetIO();
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+  io.IniFilename = get_ini_path();
 
   ImGui::StyleColorsDark();
 
